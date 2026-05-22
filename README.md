@@ -1,4 +1,4 @@
-# Simple Todo
+# TODO-Tasks
 
 A small Windows desktop todo app built with Python and WebView.
 
@@ -12,7 +12,7 @@ A small Windows desktop todo app built with Python and WebView.
 - Add a reminder with an exact time or quick timer.
 - Choose one of 10 accent colors.
 - Edit and delete tasks.
-- Stores data locally in `%APPDATA%\SimpleTodo\todo.sqlite3`.
+- Stores data locally in `%APPDATA%\TODO-Tasks\todo.sqlite3`.
 
 Reminder popups work while the app is running. This app does not install a background Windows service.
 
@@ -44,7 +44,7 @@ Use one of these formats:
 The executable will be created at:
 
 ```text
-dist\SimpleTodo.exe
+TODO-Tasks.exe
 ```
 
 ## Install
@@ -55,7 +55,7 @@ After building:
 .\install.ps1
 ```
 
-This copies the app to `%LOCALAPPDATA%\SimpleTodo` and creates a Start Menu shortcut named `Simple Todo`.
+This copies the app to `%LOCALAPPDATA%\TODO-Tasks` and creates a Start Menu shortcut named `TODO-Tasks`.
 
 ## Uninstall
 

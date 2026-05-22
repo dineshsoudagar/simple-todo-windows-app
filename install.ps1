@@ -1,13 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$SourceExe = Join-Path $Root 'dist\SimpleTodo.exe'
-$InstallDir = Join-Path $env:LOCALAPPDATA 'SimpleTodo'
-$TargetExe = Join-Path $InstallDir 'SimpleTodo.exe'
-$LauncherScript = Join-Path $InstallDir 'SimpleTodoLauncher.vbs'
+$SourceExe = Join-Path $Root 'dist\TODO-Tasks.exe'
+$InstallDir = Join-Path $env:LOCALAPPDATA 'TODO-Tasks'
+$TargetExe = Join-Path $InstallDir 'TODO-Tasks.exe'
+$LauncherScript = Join-Path $InstallDir 'TODO-TasksLauncher.vbs'
 $StartMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
-$ShortcutPath = Join-Path $StartMenuDir 'Simple Todo.lnk'
-$CmdLauncherPath = Join-Path $StartMenuDir 'Simple Todo.cmd'
+$ShortcutPath = Join-Path $StartMenuDir 'TODO-Tasks.lnk'
+$CmdLauncherPath = Join-Path $StartMenuDir 'TODO-Tasks.cmd'
 
 if (-not (Test-Path -LiteralPath $SourceExe)) {
     throw "Build first: .\build.ps1"
@@ -35,8 +35,8 @@ $shortcut = $shell.CreateShortcut($ShortcutPath)
 $shortcut.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
 $shortcut.Arguments = "`"$LauncherScript`""
 $shortcut.WorkingDirectory = $InstallDir
-$shortcut.Description = 'Simple Todo'
+$shortcut.Description = 'TODO-Tasks'
 $shortcut.Save()
 
-Write-Host "Installed Simple Todo to: $TargetExe"
+Write-Host "Installed TODO-Tasks to: $TargetExe"
 Write-Host "Start Menu shortcut: $ShortcutPath"

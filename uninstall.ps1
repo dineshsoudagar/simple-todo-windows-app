@@ -4,10 +4,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$InstallDir = Join-Path $env:LOCALAPPDATA 'SimpleTodo'
-$ShortcutPath = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Simple Todo.lnk'
-$LauncherPath = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Simple Todo.cmd'
-$DataDir = Join-Path $env:APPDATA 'SimpleTodo'
+$InstallDir = Join-Path $env:LOCALAPPDATA 'TODO-Tasks'
+$ShortcutPath = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\TODO-Tasks.lnk'
+$LauncherPath = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\TODO-Tasks.cmd'
+$DataDir = Join-Path $env:APPDATA 'TODO-Tasks'
 
 if (Test-Path -LiteralPath $ShortcutPath) {
     Remove-Item -LiteralPath $ShortcutPath -Force
@@ -25,7 +25,7 @@ if ($RemoveData -and (Test-Path -LiteralPath $DataDir)) {
     Remove-Item -LiteralPath $DataDir -Recurse -Force
 }
 
-Write-Host "Simple Todo has been uninstalled."
+Write-Host "TODO-Tasks has been uninstalled."
 if (-not $RemoveData) {
     Write-Host "Task data was kept at: $DataDir"
 }

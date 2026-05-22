@@ -9,7 +9,7 @@ MAIN_HTML = r"""
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Simple Todo</title>
+  <title>TODO-Tasks</title>
   <style>
     :root {
       --bg: #0b0d12;
@@ -237,7 +237,7 @@ MAIN_HTML = r"""
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>Simple Todo</h1>
+        <h1>TODO-Tasks</h1>
         <div id="summary" class="meta">0 categories</div>
       </div>
       <div id="accentRow" class="accent-row"></div>
@@ -261,7 +261,7 @@ MAIN_HTML = r"""
 
     function storedAccent() {
       try {
-        return localStorage.getItem("simpleTodoAccent") || ACCENTS[0];
+        return localStorage.getItem("todoTasksAccent") || ACCENTS[0];
       } catch (_error) {
         return ACCENTS[0];
       }
@@ -329,7 +329,7 @@ MAIN_HTML = r"""
     function setAccent(color) {
       state.accent = color;
       try {
-        localStorage.setItem("simpleTodoAccent", color);
+        localStorage.setItem("todoTasksAccent", color);
       } catch (_error) {}
       document.documentElement.style.setProperty("--accent", color);
       renderAccents();
@@ -717,7 +717,8 @@ CATEGORY_HTML_TEMPLATE = r"""
       border-color: transparent;
       background: transparent;
       color: var(--accent);
-      font-size: 24px;
+      font-size: 22px;
+      font-weight: 700;
       line-height: 1;
     }
 
@@ -852,14 +853,14 @@ CATEGORY_HTML_TEMPLATE = r"""
       <section id="todoSection" class="task-section">
         <div id="todoHeader" class="section-heading" role="button" tabindex="0" aria-expanded="true">
           <div class="section-title">To Do <span id="todoCount" class="section-count">0</span></div>
-          <span id="todoToggle" class="section-toggle" aria-hidden="true">⌄</span>
+          <span id="todoToggle" class="section-toggle" aria-hidden="true">-</span>
         </div>
         <div id="todoList" class="list"></div>
       </section>
       <section id="completedSection" class="task-section">
         <div id="completedHeader" class="section-heading" role="button" tabindex="0" aria-expanded="false">
           <div class="section-title">Completed <span id="completedCount" class="section-count">0</span></div>
-          <span id="completedToggle" class="section-toggle" aria-hidden="true">›</span>
+          <span id="completedToggle" class="section-toggle" aria-hidden="true">+</span>
         </div>
         <div id="completedList" class="list collapsed"></div>
       </section>
@@ -871,7 +872,9 @@ CATEGORY_HTML_TEMPLATE = r"""
   <script>
     const state = {
       tasks: [],
-      completedOpen: false
+      todoOpen: true,
+      completedOpen: false,
+      savingTaskIds: new Set()
     };
     const els = {};
 
@@ -879,14 +882,18 @@ CATEGORY_HTML_TEMPLATE = r"""
       for (const id of [
         "categoryTitle", "status", "closeButton", "taskForm",
         "taskTitle", "taskTime", "taskPeriod", "todoCount", "completedCount",
-        "todoHeader", "todoList", "completedHeader", "completedList", "completedToggle", "toast"
+        "todoHeader", "todoList", "todoToggle", "completedHeader", "completedList", "completedToggle", "toast"
       ]) {
         els[id] = document.getElementById(id);
       }
     }
 
     async function callApi(method, ...args) {
-      const response = await window.pywebview.api[method](...args);
+      const request = window.pywebview.api[method](...args);
+      const timeout = new Promise((_, reject) => {
+        window.setTimeout(() => reject(new Error("Action timed out. Try again.")), 10000);
+      });
+      const response = await Promise.race([request, timeout]);
       if (!response.ok) {
         throw new Error(response.error || "Action failed.");
       }
@@ -939,6 +946,7 @@ CATEGORY_HTML_TEMPLATE = r"""
       els.status.textContent = `${todo.length} open / ${completed.length} completed`;
       renderList(els.todoList, todo, false);
       renderList(els.completedList, completed, true);
+      renderTodoState();
       renderCompletedState();
     }
 
@@ -968,13 +976,30 @@ CATEGORY_HTML_TEMPLATE = r"""
           </div>
         `;
 
-        row.querySelector('input[type="checkbox"]').addEventListener("change", async event => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (state.savingTaskIds.has(task.id)) {
+          checkbox.disabled = true;
+        }
+        checkbox.addEventListener("change", async event => {
+          if (state.savingTaskIds.has(task.id)) {
+            event.target.checked = task.completed;
+            return;
+          }
+          const completed = event.target.checked;
+          event.target.disabled = true;
+          row.classList.toggle("done", completed);
+          state.savingTaskIds.add(task.id);
           try {
-            await callApi("set_completed", task.id, event.target.checked);
+            await callApi("set_completed", task.id, completed);
+            await delay(450);
             await loadTasks();
           } catch (error) {
             event.target.checked = task.completed;
+            row.classList.toggle("done", task.completed);
             showError(error);
+          } finally {
+            state.savingTaskIds.delete(task.id);
+            event.target.disabled = false;
           }
         });
 
@@ -1069,15 +1094,25 @@ CATEGORY_HTML_TEMPLATE = r"""
       renderCompletedState();
     }
 
-    function keepTodoOpen() {
-      els.todoList.classList.remove("collapsed");
-      els.todoHeader.setAttribute("aria-expanded", "true");
+    function toggleTodo() {
+      state.todoOpen = !state.todoOpen;
+      renderTodoState();
+    }
+
+    function renderTodoState() {
+      els.todoList.classList.toggle("collapsed", !state.todoOpen);
+      els.todoToggle.textContent = state.todoOpen ? "-" : "+";
+      els.todoHeader.setAttribute("aria-expanded", state.todoOpen ? "true" : "false");
     }
 
     function renderCompletedState() {
       els.completedList.classList.toggle("collapsed", !state.completedOpen);
-      els.completedToggle.textContent = state.completedOpen ? "⌄" : "›";
+      els.completedToggle.textContent = state.completedOpen ? "-" : "+";
       els.completedHeader.setAttribute("aria-expanded", state.completedOpen ? "true" : "false");
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => window.setTimeout(resolve, ms));
     }
 
     function bindHeaderToggle(header, action) {
@@ -1097,10 +1132,10 @@ CATEGORY_HTML_TEMPLATE = r"""
       cacheElements();
       els.taskForm.addEventListener("submit", addTask);
       els.closeButton.addEventListener("click", () => callApi("close_window"));
-      bindHeaderToggle(els.todoHeader, keepTodoOpen);
+      bindHeaderToggle(els.todoHeader, toggleTodo);
       bindHeaderToggle(els.completedHeader, toggleCompleted);
       setDefaultReminderTime();
-      keepTodoOpen();
+      renderTodoState();
       renderCompletedState();
       await loadTasks();
     });

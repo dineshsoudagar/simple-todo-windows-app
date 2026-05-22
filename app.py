@@ -18,8 +18,8 @@ except ImportError:  # pragma: no cover - Windows has winsound.
     winsound = None
 
 
-APP_NAME = "Simple Todo"
-APP_DIR_NAME = "SimpleTodo"
+APP_NAME = "TODO-Tasks"
+APP_DIR_NAME = "TODO-Tasks"
 DB_FILENAME = "todo.sqlite3"
 DB_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 USER_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
